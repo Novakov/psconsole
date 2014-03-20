@@ -3,7 +3,7 @@
     [string]$TaskName = $null,
 
     [Parameter(ParameterSetName="invoke", ValueFromRemainingArguments = $true)]
-    [Object[]]$args,
+    [Object[]]$args = @(),
 
     [Parameter(ParameterSetName="register")]
     [switch]$Register,
@@ -28,6 +28,49 @@ function invokeTask($taskName, $invocation, $args)
     Invoke-Expression "$($taskFile) $($args)"
 }
 
+function taskList() 
+{    
+    return ls "$($baseDirectory)\tasks\*.ps1" | % {
+        $help = Get-Help $_
+
+        $description = ''
+
+        if($help -is [string]) {
+            $description = ''
+        } else {
+            $description = $help.Synopsis
+        }
+
+        New-Object psobject |
+             Add-Member -MemberType NoteProperty -Name "Name" -Value $_.BaseName -PassThru |
+             Add-Member -MemberType NoteProperty -Name "Description" -Value $description -PassThru
+    }
+}
+
+function taskHelp($task)
+{
+    $scriptFile = "$($baseDirectory)\tasks\$task.ps1"
+
+    if(Test-Path $scriptFile) 
+    {
+        $help = Get-Help $scriptFile
+
+        if($help -is [string]) { return $help }
+
+        $help.details.name = "$ConsoleName $task"
+
+        foreach($syntax in $help.syntax.syntaxItem)
+        {
+            $syntax.name = "$ConsoleName $task"
+        }
+
+        $help
+    } 
+    else
+    {
+        taskList
+    }
+}
 
 if($Register)
 {    
@@ -47,6 +90,10 @@ if($Register)
         $lastBlock = [regex]::Split($line, '[|;]')[-1].TrimStart()                    
 
         switch -regex ($lastBlock) {   
+            "^$name\s+help\s+(.*)" {
+                ls "$baseDir\tasks\*.ps1" | select -ExpandProperty BaseName
+            }
+            
             "^$name\s+(\S+)\s+(.*)" {                
                 $targetScript = "$baseDir\tasks\$($Matches[1]).ps1"
 
@@ -58,7 +105,7 @@ if($Register)
             }    
         
             "^$name (.*)" {                 
-                 $tasks = ls "$baseDir\tasks\*.ps1" | select -ExpandProperty BaseName                   
+                 $tasks = (ls "$baseDir\tasks\*.ps1" | select -ExpandProperty BaseName) + @('help')
              
                  return $tasks
             }
@@ -73,8 +120,19 @@ if($Register)
 }
 else
 {
-    switch($TaskName)
-    {
+    $script:ConsoleName = $MyInvocation.InvocationName
+    
+    switch ($TaskName)
+    {        
+        'help' {
+            $helpFor = $args[0]
+
+            if($helpFor -eq $null) {
+                taskList 
+            } else {
+                taskHelp $helpFor
+            }
+        }
         default { invokeTask $TaskName $MyInvocation @args }
     }
 }

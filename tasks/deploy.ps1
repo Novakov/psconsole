@@ -1,4 +1,11 @@
-﻿param($positional, $named = "a")
+﻿<#
+.SYNOPSIS
+Deploys application
+
+
+#>
+
+param($positional, $named = "a")
 
 Write-Host "Deploy task"
 Write-Host "Positional: '$positional'"
