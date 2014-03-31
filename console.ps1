@@ -14,6 +14,10 @@
 
 $baseDirectory = [IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
 
+$libDirectory = "$($baseDirectory)\lib"
+
+$hasLib = Test-Path $libDirectory
+
 function invokeTask($taskName, $invocation, $taskArgs)
 {        
     $taskFile = "$($baseDirectory)\tasks\$taskName.ps1"
@@ -24,6 +28,15 @@ function invokeTask($taskName, $invocation, $taskArgs)
 
         exit
     }
+
+    if($hasLib)
+    {
+        ls "$($libDirectory)\*.ps1" | sort -Property BaseName | % {            
+            . $_
+        } 
+    }     
+
+    . $baseDirectory\taskHelpers.ps1
 
     $params = @()
     $callArgs = @()
