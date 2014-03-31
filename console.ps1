@@ -14,8 +14,8 @@
 
 $baseDirectory = [IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
 
-function invokeTask($taskName, $invocation, $args)
-{    
+function invokeTask($taskName, $invocation, $taskArgs)
+{        
     $taskFile = "$($baseDirectory)\tasks\$taskName.ps1"
 
     if(-not (Test-Path $taskFile))
@@ -25,7 +25,7 @@ function invokeTask($taskName, $invocation, $args)
         exit
     }
 
-    Invoke-Expression "$($taskFile) $($args)"
+    Invoke-Expression "$($taskFile) $($taskArgs)"
 }
 
 function taskList() 
@@ -105,7 +105,7 @@ if($Register)
             }    
         
             "^$name (.*)" {                 
-                 $tasks = (ls "$baseDir\tasks\*.ps1" | select -ExpandProperty BaseName) + @('help')
+                 $tasks = @(ls "$baseDir\tasks\*.ps1" | select -ExpandProperty BaseName) + @('help')
              
                  return $tasks
             }
@@ -133,6 +133,6 @@ else
                 taskHelp $helpFor
             }
         }
-        default { invokeTask $TaskName $MyInvocation @args }
+        default { invokeTask $TaskName $MyInvocation $args }
     }
 }
