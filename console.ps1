@@ -25,7 +25,30 @@ function invokeTask($taskName, $invocation, $taskArgs)
         exit
     }
 
-    Invoke-Expression "$($taskFile) $($taskArgs)"
+    $params = @()
+    $callArgs = @()
+
+    $script = "& '$taskFile' "
+
+    for($i = 0; $i -lt $taskArgs.Length; $i++)
+    {
+        if($taskArgs[$i] -is [string])
+        {
+            $script += $taskArgs[$i] + ' '
+        }
+        else
+        {
+            $params += "`$arg_$i"
+            $script+= "`$arg_$i "
+            $callArgs += $taskArgs[$i]
+        }
+    }
+
+    $paramDirective = $params -join ","
+
+    $block = [scriptblock]::Create("param($paramDirective) $script")
+
+    $block.Invoke($callArgs)
 }
 
 function taskList() 
