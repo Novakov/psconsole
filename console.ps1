@@ -111,7 +111,7 @@ if($Register)
             }
 
             default {                
-                if(Test-Path function:\tab_exp_backup_$Name) { & "tab_exp_backup_$Name" $line,$lastWord }
+                if(Test-Path function:\tab_exp_backup_$Name) { & "tab_exp_backup_$Name" $line $lastWord }
             }
         }         
     }
