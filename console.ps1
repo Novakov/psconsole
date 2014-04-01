@@ -61,7 +61,7 @@ function invokeTask($taskName, $invocation, $taskArgs)
 
     $block = [scriptblock]::Create("param($paramDirective) $script")
 
-    $block.Invoke($callArgs)
+    Invoke-Command -ScriptBlock $block -ArgumentList $callArgs
 }
 
 function taskList() 
